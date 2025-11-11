@@ -1,0 +1,14 @@
+# Expo / React Native
+node_modules
+.expo
+.expo-shared
+.expo-env.local
+package-lock.json
+yarn.lock
+/dist
+/build
+*.jks
+*.p12
+*.key
+*.mobileprovision
+*.keystore

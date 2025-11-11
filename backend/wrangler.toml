@@ -1,0 +1,13 @@
+# Cloudflare Worker Configuration Template
+# Copy this file to: backend/wrangler.toml
+
+name = "your-worker-name"
+main = "src/index.ts"              # Use .ts for TypeScript
+compatibility_date = "2025-01-01"  # Recent date for modern features
+compatibility_flags = ["nodejs_compat"]  # Automatically added by deployment tool
+
+# D1 Database binding (configured by deployment tool)
+# [[d1_databases]]
+# binding = "DB"
+# database_name = "your-database"
+# database_id = "your-database-id"
