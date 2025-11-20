@@ -133,7 +133,7 @@ export async function capturePayment(
   );
 
   // Map Stripe status to database status
-  let dbStatus = currentStripeIntent.status;
+  let dbStatus: string = currentStripeIntent.status;
   if (currentStripeIntent.status === 'requires_capture') {
     dbStatus = 'authorized';
   }
