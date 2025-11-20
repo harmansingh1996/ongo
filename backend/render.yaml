@@ -1,0 +1,40 @@
+services:
+  # Main API service
+  - type: web
+    name: rideshare-backend-api
+    env: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: ./
+    region: oregon # Choose closest region to your users
+    plan: starter # Free tier or paid plan
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+      - key: SUPABASE_URL
+        sync: false # Set in Render dashboard
+      - key: SUPABASE_SERVICE_ROLE_KEY
+        sync: false # Set in Render dashboard (secret)
+      - key: SUPABASE_ANON_KEY
+        sync: false # Set in Render dashboard (secret)
+      - key: STRIPE_SECRET_KEY
+        sync: false # Set in Render dashboard (secret)
+      - key: ALLOWED_ORIGINS
+        value: "*" # Update with your frontend URL
+
+  # Cron job for payment capture worker
+  - type: cron
+    name: rideshare-payment-capture-cron
+    env: docker
+    dockerfilePath: ./Dockerfile
+    dockerContext: ./
+    region: oregon
+    plan: starter
+    schedule: "*/5 * * * *" # Every 5 minutes
+    buildCommand: npm run build
+    startCommand: >
+      curl -X POST https://rideshare-backend-api.onrender.com/api/worker/payment-capture
+      -H "Content-Type: application/json"
+      -d "{}"

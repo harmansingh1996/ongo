@@ -1,0 +1,7 @@
+{
+  "name": "OnGoPool - Carpool App",
+  "version": "1.0.0",
+  "description": "Mobile-first carpool application with map-based routing",
+  "mapbox_token": "pk.eyJ1IjoiaGFybWFuMTk5NiIsImEiOiJjbWkwZDQxdmIwdzBwMmlweG1hZjA3bzFiIn0.HBe3yN3nJMtHI1wtybZQOg",
+  "stripe_publishable_key": "pk_test_51SUznWDINVeK2wmisK5ocjl6Ss6hRCUgcE9v2zLN0qsiHDjaaCHoLkYJ5AlnxxUWnv8ULVXr88U9LsM0yxgjouHN00YV2vRhwj"
+}

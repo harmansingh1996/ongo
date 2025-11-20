@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Manual Payment Capture - OnGoPool</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50">
+  <div class="max-w-4xl mx-auto p-6">
+    <div class="bg-white rounded-lg shadow-lg p-8">
+      <h1 class="text-3xl font-bold mb-6 text-gray-900">Manual Payment Capture Tool</h1>
+      
+      <div class="bg-yellow-50 border-l-4 border-yellow-400 p-4 mb-6">
+        <div class="flex">
+          <div class="ml-3">
+            <p class="text-sm text-yellow-700">
+              <strong>Purpose:</strong> This tool manually captures stuck payments for completed rides.
+            </p>
+            <p class="text-sm text-yellow-700 mt-2">
+              <strong>Ride ID:</strong> 00980084-bae2-4443-86f7-d94470d0160e<br>
+              <strong>Payment Intent ID:</strong> e1a3edf5-28f3-4934-a93d-52061487b3c6<br>
+              <strong>Amount:</strong> $5.00 CAD<br>
+              <strong>Status:</strong> authorized (needs capture)
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="space-y-4">
+        <button 
+          id="captureBtn"
+          class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition-colors"
+        >
+          Capture Payment Now
+        </button>
+
+        <div id="result" class="hidden mt-6 p-4 rounded-lg"></div>
+      </div>
+
+      <div class="mt-8 p-4 bg-gray-100 rounded-lg">
+        <h2 class="font-semibold mb-2">What this does:</h2>
+        <ol class="list-decimal list-inside space-y-2 text-sm text-gray-700">
+          <li>Calls the Supabase Edge Function to capture the Stripe payment</li>
+          <li>Updates payment status from 'authorized' to 'succeeded'</li>
+          <li>Creates driver earnings record</li>
+          <li>Creates payment history record</li>
+          <li>Transfers funds from rider to platform</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    // Import Supabase client
+    import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+    const SUPABASE_URL = 'https://fewhwgvlgstmukhebyvz.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZld2h3Z3ZsZ3N0bXVraGVieXZ6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzE2MDIwMzcsImV4cCI6MjA0NzE3ODAzN30.sUVHg8EXvSzKuXHqN0V94SLpKb6O6GxdXu8UpJBVBqY';
+    
+    const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    const paymentIntentId = 'e1a3edf5-28f3-4934-a93d-52061487b3c6';
+
+    document.getElementById('captureBtn').addEventListener('click', async () => {
+      const btn = document.getElementById('captureBtn');
+      const resultDiv = document.getElementById('result');
+      
+      btn.disabled = true;
+      btn.textContent = 'Capturing payment...';
+      resultDiv.classList.add('hidden');
+
+      try {
+        console.log('Calling Stripe Edge Function to capture payment...');
+        
+        const { data, error } = await supabase.functions.invoke('stripe-payment', {
+          body: {
+            action: 'capture',
+            paymentIntentId: paymentIntentId
+          }
+        });
+
+        if (error) {
+          throw error;
+        }
+
+        console.log('Capture result:', data);
+
+        // Show success
+        resultDiv.className = 'mt-6 p-4 rounded-lg bg-green-50 border border-green-200';
+        resultDiv.innerHTML = `
+          <h3 class="font-semibold text-green-900 mb-2">✅ Payment Captured Successfully!</h3>
+          <div class="text-sm text-green-800 space-y-1">
+            <p><strong>Captured Amount:</strong> $${(data.capturedAmount / 100).toFixed(2)} CAD</p>
+            <p><strong>Stripe Payment ID:</strong> ${data.stripePaymentIntentId}</p>
+            <p><strong>Status:</strong> succeeded</p>
+            ${data.earningCreated ? '<p><strong>Driver Earning:</strong> Created ✅</p>' : ''}
+          </div>
+        `;
+        resultDiv.classList.remove('hidden');
+
+        btn.textContent = '✅ Payment Captured';
+        btn.className = 'w-full bg-green-600 text-white font-bold py-3 px-6 rounded-lg cursor-not-allowed';
+
+      } catch (err) {
+        console.error('Capture error:', err);
+
+        resultDiv.className = 'mt-6 p-4 rounded-lg bg-red-50 border border-red-200';
+        resultDiv.innerHTML = `
+          <h3 class="font-semibold text-red-900 mb-2">❌ Capture Failed</h3>
+          <p class="text-sm text-red-800">${err.message || 'Unknown error occurred'}</p>
+        `;
+        resultDiv.classList.remove('hidden');
+
+        btn.disabled = false;
+        btn.textContent = 'Try Again';
+      }
+    });
+  </script>
+</body>
+</html>
